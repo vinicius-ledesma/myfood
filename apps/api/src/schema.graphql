@@ -1,3 +1,37 @@
+directive @auth(role: UserRole) on FIELD_DEFINITION
+
+scalar DateTime
+
+# User
+enum UserRole {
+  USER
+  ADMIN
+}
+
+type User {
+  _id: ID!
+  name: String!
+  email: String!
+  role: UserRole!
+}
+
+input UserSignUpInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+input UserSignInInput {
+  email: String!
+  password: String!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+# Product
 type Product {
   _id: ID!
   name: String!
@@ -27,12 +61,60 @@ enum Unit {
   KG
 }
 
+# Order
+enum OrderStatus {
+  WAITING_PAYMENT
+  IN_QUEUE
+  PREPARING
+  READY
+  ON_THE_WAY
+  DELIVERED
+}
+
+type Order {
+  _id: ID!
+  user: User!
+  total: Float!
+  status: OrderStatus!
+  items: [OrderItem]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input OrderCreateInput {
+  status: OrderStatus
+  items: [OrderItemCreateInput!]
+  user: ID
+}
+
+# OrderItem
+type OrderItem {
+  _id: ID!
+  product: Product!
+  quantity: Float!
+  total: Float!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input OrderItemCreateInput {
+  product: Product!
+  quantity: Float!
+  total: Float!
+}
+
 type Query {
+  orders: [Order!]! @auth
+  order(_id: ID!): Order! @auth
   products: [Product!]!
   product(_id: ID!): Product!
 }
 
 type Mutation {
+  signup(data: UserSignUpInput!): AuthPayload!
+  signin(data: UserSignInInput!): AuthPayload!
+  createOrder(data: OrderCreateInput!): Order! @auth
+  deleteOrder(_id: ID!): Order! @auth
   createProduct(data: ProductCreateInput!): Product!
   deleteProduct(_id: ID!): Product!
   updateProduct(data: ProductUpdateInput!, _id: ID!): Product!

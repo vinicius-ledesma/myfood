@@ -1,12 +1,13 @@
-import { Types } from 'mongoose'
-import { CheckExistenceOptions } from './types'
+import { SignOptions, sign } from 'jsonwebtoken'
+import { Types, Document, Model } from 'mongoose'
+import { CheckExistenceOptions, TokenPayload } from './types'
 import { CustomError } from './errors'
 
 const isMongoId = (value: string): boolean => Types.ObjectId.isValid(value)
 
-const checkExistence = async (
+const findDocument = async <T extends Document>(
   opts: CheckExistenceOptions,
-): Promise<boolean> => {
+): Promise<T> => {
   const {
     db,
     model,
@@ -25,9 +26,11 @@ const checkExistence = async (
     )
   }
 
-  const exists = await db[model].exists(where || { [field]: value })
+  const document = await ((db[model] as unknown) as Model<T>)
+    .findOne(where || { [field]: value })
+    .exec()
 
-  if (!exists) {
+  if (!document) {
     throw new CustomError(
       message || `${model} with ${field} '${value}' not found!`,
       errorCode || 'NOT_FOUND_ERROR',
@@ -35,7 +38,10 @@ const checkExistence = async (
     )
   }
 
-  return exists
+  return document
 }
 
-export { isMongoId, checkExistence }
+const issueToken = (payload: TokenPayload, options?: SignOptions): string =>
+  sign(payload, process.env.JWT_SECRET, { expiresIn: '2h', ...options })
+
+export { findDocument, isMongoId, issueToken }

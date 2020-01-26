@@ -1,8 +1,8 @@
-import { Schema, Document } from 'mongoose'
+import { Document, Types } from 'mongoose'
 import { OmitId } from '.'
 
 export interface Product {
-  _id: Schema.Types.ObjectId
+  _id: Types.ObjectId
   name: string
   description: string
   price: number
@@ -10,7 +10,7 @@ export interface Product {
 }
 
 export interface ProductDocument extends Product, Document {
-  _id: Schema.Types.ObjectId
+  _id: Types.ObjectId
 }
 
 export interface ProductCreateInput {
@@ -18,7 +18,7 @@ export interface ProductCreateInput {
 }
 
 export interface ProductByIDInput {
-  _id: Schema.Types.ObjectId
+  _id: string
 }
 
 export interface ProductUpdateInput
