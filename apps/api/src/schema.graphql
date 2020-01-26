@@ -98,7 +98,7 @@ type OrderItem {
 }
 
 input OrderItemCreateInput {
-  product: Product!
+  product: ID!
   quantity: Float!
   total: Float!
 }
