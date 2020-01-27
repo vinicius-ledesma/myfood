@@ -1,5 +1,4 @@
 directive @auth(role: UserRole) on FIELD_DEFINITION
-
 scalar DateTime
 
 # User
@@ -87,6 +86,14 @@ input OrderCreateInput {
   user: ID
 }
 
+input OrderUpdateInput {
+  status: OrderStatus
+  user: ID
+  itemsToAdd: [OrderItemCreateInput!]
+  itemsToUpdate: [OrderItemUpdateInput!]
+  itemsToDelete: [ID!]
+}
+
 # OrderItem
 type OrderItem {
   _id: ID!
@@ -103,6 +110,13 @@ input OrderItemCreateInput {
   total: Float!
 }
 
+input OrderItemUpdateInput {
+  _id: ID!
+  product: ID!
+  quantity: Float!
+  total: Float!
+}
+
 type Query {
   orders: [Order!]! @auth
   order(_id: ID!): Order! @auth
@@ -113,9 +127,11 @@ type Query {
 type Mutation {
   signup(data: UserSignUpInput!): AuthPayload!
   signin(data: UserSignInInput!): AuthPayload!
-  createOrder(data: OrderCreateInput!): Order! @auth
+  createOrder(data: OrderCreateInput): Order! @auth
+  updateOrder(data: OrderUpdateInput!, _id: ID!): Order! @auth
   deleteOrder(_id: ID!): Order! @auth
-  createProduct(data: ProductCreateInput!): Product!
-  deleteProduct(_id: ID!): Product!
+  createProduct(data: ProductCreateInput!): Product! @auth(role: ADMIN)
   updateProduct(data: ProductUpdateInput!, _id: ID!): Product!
+    @auth(role: ADMIN)
+  deleteProduct(_id: ID!): Product! @auth(role: ADMIN)
 }

@@ -1,8 +1,8 @@
 import {
   Resolver,
-  ProductByIDInput,
+  ProductByIDArgs,
   UserRole,
-  OrderByIdInput,
+  OrderByIdArgs,
   ProductDocument,
   OrderDocument,
 } from '../types'
@@ -15,7 +15,7 @@ const orders: Resolver<{}> = (_, args, { db, authUser }) => {
   return Order.find(conditions)
 }
 
-const order: Resolver<OrderByIdInput> = (_, args, { db, authUser }) => {
+const order: Resolver<OrderByIdArgs> = (_, args, { db, authUser }) => {
   const { _id } = args
   const { _id: userId, role } = authUser
   const where = role === UserRole.USER ? { user: userId, _id } : null
@@ -29,7 +29,7 @@ const order: Resolver<OrderByIdInput> = (_, args, { db, authUser }) => {
 }
 
 const products: Resolver<{}> = (_, args, { db }) => db.Product.find()
-const product: Resolver<ProductByIDInput> = async (_, args, { db }) => {
+const product: Resolver<ProductByIDArgs> = async (_, args, { db }) => {
   const { _id } = args
   return findDocument<ProductDocument>({
     db,

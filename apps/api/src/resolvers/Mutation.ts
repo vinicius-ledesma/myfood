@@ -2,27 +2,29 @@ import {
   OrderCreateArgs,
   OrderDocument,
   OrderDeleteArgs,
-  ProductCreateInput,
-  ProductByIDInput,
+  OrderUpdateArgs,
+  ProductCreateArgs,
+  ProductByIDArgs,
   ProductDocument,
-  ProductUpdateInput,
+  ProductUpdateArgs,
   Resolver,
   UserRole,
-  UserSignInInput,
-  UserSignUpInput,
+  UserSignInArgs,
+  UserSignUpArgs,
 } from '../types'
-import { findDocument, issueToken } from '../utils'
+import { Types } from 'mongoose'
+import { findDocument, findOrderItem, issueToken } from '../utils'
 import { hash, compare } from 'bcryptjs'
 import { CustomError } from '../errors'
 
-const createProduct: Resolver<ProductCreateInput> = (_, args, { db }) => {
+const createProduct: Resolver<ProductCreateArgs> = (_, args, { db }) => {
   const { Product } = db
   const { data } = args
   const product = new Product(data)
   return product.save()
 }
 
-const deleteProduct: Resolver<ProductByIDInput> = async (_, args, { db }) => {
+const deleteProduct: Resolver<ProductByIDArgs> = async (_, args, { db }) => {
   const { _id } = args
   const product = await findDocument<ProductDocument>({
     db,
@@ -33,7 +35,7 @@ const deleteProduct: Resolver<ProductByIDInput> = async (_, args, { db }) => {
   return product.remove()
 }
 
-const updateProduct: Resolver<ProductUpdateInput> = async (_, args, { db }) => {
+const updateProduct: Resolver<ProductUpdateArgs> = async (_, args, { db }) => {
   const { _id, data } = args
   const product = await findDocument<ProductDocument>({
     db,
@@ -45,7 +47,7 @@ const updateProduct: Resolver<ProductUpdateInput> = async (_, args, { db }) => {
   return product.save()
 }
 
-const signin: Resolver<UserSignInInput> = async (_, args, { db }) => {
+const signin: Resolver<UserSignInArgs> = async (_, args, { db }) => {
   const { User } = db
   const { email, password } = args.data
   const error = new CustomError(
@@ -69,7 +71,7 @@ const signin: Resolver<UserSignInInput> = async (_, args, { db }) => {
   return { token, user }
 }
 
-const signup: Resolver<UserSignUpInput> = async (_, args, { db }) => {
+const signup: Resolver<UserSignUpArgs> = async (_, args, { db }) => {
   const { User } = db
   const { data } = args
 
@@ -94,8 +96,13 @@ const createOrder: Resolver<OrderCreateArgs> = async (
   const { _id, role } = authUser
   const { Order } = db
   const user = role === UserRole.USER ? _id : data.user || _id
+
   const total =
-    (data.user && data.items.reduce((sum, item) => sum + item.total, 0)) || 0
+    (data &&
+      data.user &&
+      data.items.reduce((sum, item) => sum + item.total, 0)) ||
+    0
+
   const order = await new Order({
     ...data,
     total,
@@ -125,12 +132,76 @@ const deleteOrder: Resolver<OrderDeleteArgs> = async (
   return order.remove()
 }
 
+const updateOrder: Resolver<OrderUpdateArgs> = async (
+  _,
+  args,
+  { db, authUser },
+) => {
+  const { data, _id } = args
+  const { _id: userId, role } = authUser
+  const isAdmin = role === UserRole.ADMIN
+
+  const where = !isAdmin ? { _id, user: userId } : null
+  const order = await findDocument<OrderDocument>({
+    db,
+    model: 'Order',
+    field: '_id',
+    value: _id,
+    where,
+  })
+
+  const user = !isAdmin ? userId : data.user || order.user
+
+  const {
+    itemsToAdd = [],
+    itemsToUpdate = [],
+    itemsToDelete = [],
+    status,
+  } = args.data
+
+  const foundItemsToUpdate = itemsToUpdate.map(orderItem =>
+    findOrderItem(order.items, orderItem._id, 'update'),
+  )
+  const foundItemsToDelete = itemsToDelete.map(orderItemId =>
+    findOrderItem(order.items, orderItemId, 'delete'),
+  )
+
+  foundItemsToUpdate.forEach((orderItem, index) =>
+    orderItem.set(itemsToUpdate[index]),
+  )
+  foundItemsToDelete.forEach(orderItem => orderItem.remove())
+
+  itemsToAdd.forEach(itemToAdd => {
+    const foundItem = order.items.find(item =>
+      (item.product as Types.ObjectId).equals(itemToAdd.product),
+    )
+
+    if (foundItem) {
+      return foundItem.set({
+        quantity: foundItem.quantity + itemToAdd.quantity,
+        total: foundItem.total + itemToAdd.total,
+      })
+    }
+
+    order.items.push(itemToAdd)
+  })
+
+  const total = order.items.reduce((sum, item) => sum + item.total, 0)
+
+  order.user = user
+  order.status = status || order.status
+  order.total = total
+
+  return order.save()
+}
+
 export default {
   createProduct,
-  deleteProduct,
   updateProduct,
+  deleteProduct,
   signin,
   signup,
   createOrder,
+  updateOrder,
   deleteOrder,
 }

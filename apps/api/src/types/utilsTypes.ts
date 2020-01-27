@@ -2,7 +2,7 @@ import { Models } from '.'
 import { Types } from 'mongoose'
 import { UserRole } from '.'
 
-export interface CheckExistenceOptions {
+export interface FindDocumentOptions {
   model: keyof Models
   db: Models
   field?: string
