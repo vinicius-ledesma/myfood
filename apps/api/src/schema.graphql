@@ -53,6 +53,15 @@ input ProductUpdateInput {
   unit: Unit
 }
 
+enum ProductOrderByInput {
+  name_ASC
+  name_DESC
+  price_ASC
+  price_DESC
+  unit_ASC
+  unit_DESC
+}
+
 enum Unit {
   UN
   LT
@@ -94,6 +103,15 @@ input OrderUpdateInput {
   itemsToDelete: [ID!]
 }
 
+enum OrderOrderByInput {
+  total_ASC
+  total_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
 # OrderItem
 type OrderItem {
   _id: ID!
@@ -118,9 +136,9 @@ input OrderItemUpdateInput {
 }
 
 type Query {
-  orders: [Order!]! @auth
+  orders(skip: Int, limit: Int, orderBy: [OrderOrderByInput!]): [Order!]! @auth
   order(_id: ID!): Order! @auth
-  products: [Product!]!
+  products(skip: Int, limit: Int, orderBy: [ProductOrderByInput!]): [Product!]!
   product(_id: ID!): Product!
 }
 

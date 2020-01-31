@@ -1,8 +1,9 @@
-import { SignOptions, sign } from 'jsonwebtoken'
-import { Types, Document, Model } from 'mongoose'
+import { sign, SignOptions } from 'jsonwebtoken'
+import { Document, DocumentQuery, Model, Types } from 'mongoose'
 import {
   FindDocumentOptions,
   OrderItemSubdocument,
+  PaginationArgs,
   TokenPayload,
 } from './types'
 import { CustomError } from './errors'
@@ -72,4 +73,32 @@ const findOrderItem = (
   return item
 }
 
-export { findDocument, findOrderItem, isMongoId, issueToken }
+const paginateAndSort = <TDoc extends Document>(
+  query: DocumentQuery<TDoc[], TDoc>,
+  args: PaginationArgs,
+): DocumentQuery<TDoc[], TDoc> => {
+  const { skip = 0, limit = 10, orderBy = [] } = args
+  return query
+    .skip(skip)
+    .limit(limit <= 20 ? limit : 20)
+    .sort(orderBy.join(' '))
+}
+
+const buildOrderByResolvers = (fields: string[]): Record<string, string> =>
+  fields.reduce(
+    (resolvers, field) => ({
+      ...resolvers,
+      [`${field}_ASC`]: field,
+      [`${field}_DESC`]: `-${field}`,
+    }),
+    {},
+  )
+
+export {
+  buildOrderByResolvers,
+  findDocument,
+  findOrderItem,
+  isMongoId,
+  issueToken,
+  paginateAndSort,
+}
