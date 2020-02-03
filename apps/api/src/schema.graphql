@@ -53,6 +53,13 @@ input ProductUpdateInput {
   unit: Unit
 }
 
+enum Unit {
+  UN
+  LT
+  GR
+  KG
+}
+
 enum ProductOrderByInput {
   name_ASC
   name_DESC
@@ -62,11 +69,36 @@ enum ProductOrderByInput {
   unit_DESC
 }
 
-enum Unit {
-  UN
-  LT
-  GR
-  KG
+input ProductWhereInput {
+  nameEq: String
+  nameNe: String
+  nameIn: [String]
+  nameNin: [String]
+  nameRegex: String
+  nameOptions: String
+  descriptionEq: String
+  descriptionNe: String
+  descriptionIn: [String]
+  descriptionNin: [String]
+  descriptionRegex: String
+  descriptionOptions: String
+  priceEq: Float
+  priceNe: Float
+  priceIn: [Float]
+  priceNin: [Float]
+  priceLt: Float
+  priceLte: Float
+  priceGt: Float
+  priceGte: Float
+  unitEq: String
+  unitNe: String
+  unitIn: [String]
+  unitNin: [String]
+  unitRegex: String
+  unitOptions: String
+  AND: [ProductWhereInput!]
+  OR: [ProductWhereInput!]
+  NOR: [ProductWhereInput!]
 }
 
 # Order
@@ -112,6 +144,44 @@ enum OrderOrderByInput {
   updatedAt_DESC
 }
 
+input OrderWhereInput {
+  totalEq: Float
+  totalNe: Float
+  totalIn: [Float]
+  totalNin: [Float]
+  totalLt: Float
+  totalLte: Float
+  totalGt: Float
+  totalGte: Float
+  statusEq: OrderStatus
+  statusNe: OrderStatus
+  statusIn: [OrderStatus]
+  statusNin: [OrderStatus]
+  createdAtEq: DateTime
+  createdAtNe: DateTime
+  createdAtIn: [DateTime]
+  createdAtNin: [DateTime]
+  createdAtLt: DateTime
+  createdAtLte: DateTime
+  createdAtGt: DateTime
+  createdAtGte: DateTime
+  updatedAtEq: DateTime
+  updatedAtNe: DateTime
+  updatedAtIn: [DateTime]
+  updatedAtNin: [DateTime]
+  updatedAtLt: DateTime
+  updatedAtLte: DateTime
+  updatedAtGt: DateTime
+  updatedAtGte: DateTime
+  userEq: ID
+  userNe: ID
+  userIn: [ID!]
+  userNin: [ID!]
+  AND: [OrderWhereInput!]
+  OR: [OrderWhereInput!]
+  NOR: [OrderWhereInput!]
+}
+
 # OrderItem
 type OrderItem {
   _id: ID!
@@ -136,9 +206,19 @@ input OrderItemUpdateInput {
 }
 
 type Query {
-  orders(skip: Int, limit: Int, orderBy: [OrderOrderByInput!]): [Order!]! @auth
+  orders(
+    skip: Int
+    limit: Int
+    orderBy: [OrderOrderByInput!]
+    where: OrderWhereInput
+  ): [Order!]! @auth
   order(_id: ID!): Order! @auth
-  products(skip: Int, limit: Int, orderBy: [ProductOrderByInput!]): [Product!]!
+  products(
+    skip: Int
+    limit: Int
+    orderBy: [ProductOrderByInput!]
+    where: ProductWhereInput
+  ): [Product!]!
   product(_id: ID!): Product!
 }
 

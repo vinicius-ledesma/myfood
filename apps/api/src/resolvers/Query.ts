@@ -7,12 +7,14 @@ import {
   Resolver,
   UserRole,
 } from '../types'
-import { findDocument, paginateAndSort } from '../utils'
+import { buildConditions, findDocument, paginateAndSort } from '../utils'
 
 const orders: Resolver<PaginationArgs> = (_, args, { db, authUser }) => {
   const { _id, role } = authUser
   const { Order } = db
-  const conditions = role === UserRole.USER ? { user: _id } : {}
+  let conditions = buildConditions(args.where)
+  conditions =
+    role === UserRole.USER ? { ...conditions, user: _id } : conditions
   return paginateAndSort(Order.find(conditions), args)
 }
 
@@ -31,7 +33,8 @@ const order: Resolver<OrderByIdArgs> = (_, args, { db, authUser }) => {
 
 const products: Resolver<PaginationArgs> = (_, args, { db }) => {
   const { Product } = db
-  return paginateAndSort(Product.find(), args)
+  const conditions = buildConditions(args.where)
+  return paginateAndSort(Product.find(conditions), args)
 }
 
 const product: Resolver<ProductByIDArgs> = async (_, args, { db }) => {

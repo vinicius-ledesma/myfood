@@ -94,7 +94,61 @@ const buildOrderByResolvers = (fields: string[]): Record<string, string> =>
     {},
   )
 
+const operators = [
+  { name: 'Eq', op: '$eq' },
+  { name: 'Ne', op: '$ne' },
+  { name: 'Lt', op: '$lt' },
+  { name: 'Lte', op: '$lte' },
+  { name: 'Gt', op: '$gt' },
+  { name: 'Gte', op: '$gte' },
+  { name: 'In', op: '$in' },
+  { name: 'Nin', op: '$nin' },
+  { name: 'Regex', op: '$regex' },
+  { name: 'Options', op: '$options' },
+]
+
+const idFields = ['user']
+
+const buildConditions = (
+  where: Record<string, any> = {},
+): Record<string, any> =>
+  Object.keys(where).reduce((conditions, whereKey) => {
+    if (idFields.some(idField => whereKey.includes(idField))) {
+      const ids: [string] = Array.isArray(where[whereKey])
+        ? where[whereKey]
+        : [where[whereKey]]
+
+      if (ids.some(id => !isMongoId(id))) {
+        throw new CustomError(
+          `Invalid ID value for condition '${whereKey}'`,
+          'INVALID_ID_ERROR',
+        )
+      }
+    }
+
+    const operator = operators.find(({ name }) =>
+      new RegExp(`${name}$`).test(whereKey),
+    )
+
+    const fieldName = operator
+      ? whereKey.replace(operator.name, '') //price
+      : '$' + whereKey.toLowerCase() // $or
+
+    const fieldValue = operator
+      ? {
+          ...conditions[fieldName],
+          [operator.op]: where[whereKey],
+        }
+      : where[whereKey].map(buildConditions)
+
+    return {
+      ...conditions,
+      [fieldName]: fieldValue,
+    }
+  }, {})
+
 export {
+  buildConditions,
   buildOrderByResolvers,
   findDocument,
   findOrderItem,
