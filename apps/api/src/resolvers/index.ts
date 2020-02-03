@@ -4,6 +4,7 @@ import Order from './Order'
 import OrderItem from './OrderItem'
 import OrderOrderByInput from './OrderOrderByInput'
 import ProductOrderByInput from './ProductOrderByInput'
+import Subscription from './Subscription'
 
 export default {
   Query,
@@ -12,4 +13,5 @@ export default {
   OrderItem,
   OrderOrderByInput,
   ProductOrderByInput,
+  Subscription,
 }
