@@ -22,9 +22,7 @@ const orderFilterFn: Resolver<SubscriptionArgs, SubscriptionPayload<Order>> = (
   ctx,
 ) => {
   const { _id, role } = ctx.authUser
-  return role === UserRole.ADMIN
-    ? true
-    : (payload.node.user as Types.ObjectId).equals(_id)
+  return role === UserRole.ADMIN ? true : payload.node.user === _id
 }
 
 const order: SubscriptionResolver<Order> = {
