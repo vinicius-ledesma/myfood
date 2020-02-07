@@ -1,7 +1,10 @@
+import { GraphQLResolveInfo } from 'graphql'
+import { fieldsList } from 'graphql-fields-list'
 import { sign, SignOptions } from 'jsonwebtoken'
 import { Document, DocumentQuery, Model, Types } from 'mongoose'
 import {
   FindDocumentOptions,
+  GetFieldsOptions,
   OrderItemSubdocument,
   PaginationArgs,
   TokenPayload,
@@ -22,6 +25,7 @@ const findDocument = async <T extends Document>(
     where,
     errorCode,
     extensions,
+    select,
   } = opts
 
   if (field === '_id' && !isMongoId(value)) {
@@ -33,6 +37,7 @@ const findDocument = async <T extends Document>(
 
   const document = await ((db[model] as unknown) as Model<T>)
     .findOne(where || { [field]: value })
+    .select(select)
     .exec()
 
   if (!document) {
@@ -147,11 +152,25 @@ const buildConditions = (
     }
   }, {})
 
+const getFields = (
+  info: GraphQLResolveInfo,
+  options?: GetFieldsOptions,
+): string => {
+  let fields = fieldsList(info)
+  if (options) {
+    const { include = [], skip = [] } = options
+    fields = fields.concat(include)
+    fields = fields.filter(f => !skip.includes(f))
+  }
+  return fields.join(' ')
+}
+
 export {
   buildConditions,
   buildOrderByResolvers,
   findDocument,
   findOrderItem,
+  getFields,
   isMongoId,
   issueToken,
   paginateAndSort,
