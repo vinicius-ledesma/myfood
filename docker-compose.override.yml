@@ -1,9 +1,15 @@
 version: "3.4"
 
 services:
+  traefik:
+    command:
+      - --api.insecure
+      - --providers.docker
+      - --providers.docker.exposedByDefault=false
+
   api:
-    ports:
-      - "4000:4000"
+    build:
+      target: dev-stage
     command: npm run dev
     volumes:
       - ./apps/api:/usr/app
@@ -11,6 +17,8 @@ services:
   mongo-express:
     container_name: mongo-express
     image: mongo-express:0.49
+    depends_on:
+      - mongo
     ports:
       - "8081:8081"
     environment:
