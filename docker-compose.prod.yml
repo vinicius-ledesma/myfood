@@ -53,10 +53,10 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
-      environment:
-        TZ: ${MONGO_TIMEZONE:-America/Sao_Paulo}
-      volumes:
-        - /home/data/mongo/db:/data/db
+    environment:
+      TZ: ${MONGO_TIMEZONE:-America/Sao_Paulo}
+    volumes:
+      - /home/data/mongo/db:/data/db
 
   redis:
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
