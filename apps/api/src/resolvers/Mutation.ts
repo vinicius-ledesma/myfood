@@ -112,7 +112,7 @@ const createOrder: Resolver<OrderCreateArgs> = async (
 
   const total =
     (data &&
-      data.user &&
+      data.items &&
       data.items.reduce((sum, item) => sum + item.total, 0)) ||
     0
 
