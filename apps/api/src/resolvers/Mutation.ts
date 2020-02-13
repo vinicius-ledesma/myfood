@@ -3,6 +3,7 @@ import {
   OrderCreateArgs,
   OrderDocument,
   OrderDeleteArgs,
+  OrderStatus,
   OrderUpdateArgs,
   ProductCreateArgs,
   ProductByIDArgs,
@@ -109,6 +110,7 @@ const createOrder: Resolver<OrderCreateArgs> = async (
   const { _id, role } = authUser
   const { Order } = db
   const user = role === UserRole.USER ? _id : data.user || _id
+  const status = role === UserRole.USER ? 'WAITING_PAYMENT' : data.status
 
   const total =
     (data &&
@@ -120,6 +122,7 @@ const createOrder: Resolver<OrderCreateArgs> = async (
     ...data,
     total,
     user,
+    status,
   }).save()
 
   pubsub.publish('ORDER_CREATED', {
